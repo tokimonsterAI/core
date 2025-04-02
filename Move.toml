@@ -1,0 +1,21 @@
+[package]
+name = "tokimonster"
+version = "1.0.1"
+authors = ["tokimonster team"]
+
+[addresses]
+Tokimonster = "_"
+dex_contract = "_"
+deployer = "_"
+
+[dev-addresses]
+Tokimonster = "0xCaffe"
+dex_contract = "0xFeca"
+deployer = "0xDead"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-framework.git", subdir = "aptos-framework", rev = "mainnet" }
+dex = { git = "https://github.com/Hyperfluid/hyperfluid-interface", rev = "main" }
+
+[dev-dependencies]
+dex = { local = "hyperfluid-interface" }
