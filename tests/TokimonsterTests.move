@@ -202,6 +202,8 @@ module Tokimonster::TokimonsterTests {
 
         // Toggle token to allowed
         Tokimonster::toggle_allow_paired_token(&tokimonster, test_token, true);
+        // Toggle token to not allowed
+        Tokimonster::toggle_allow_paired_token(&tokimonster, test_token, false);
     }
 
     #[test]

@@ -225,7 +225,7 @@ module Tokimonster::Tokimonster {
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
         let object_address = object::create_object_address(&signer_addr, TOKIMONSTER_NAME);
         let tokimonster_storage = borrow_global_mut<TokimonsterStorage>(object_address);
-        tokimonster_storage.allowed_paired_tokens.add(token, allowed);
+        tokimonster_storage.allowed_paired_tokens.upsert(token, allowed);
 
         let event = ToggleAllowPairedTokenEvent {
             store_address: object_address,
