@@ -1,9 +1,9 @@
-### 编译测试
+### compile
 aptos move compile --dev
 
-### 测试
+### test
 aptos move test
 
-### 发布
+### deploy
 aptos move publish --profile default --named-addresses Tokimonster="",dex_contract="",deployer=""
 
