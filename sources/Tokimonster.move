@@ -261,7 +261,6 @@ module Tokimonster::Tokimonster {
         tokimonster_config.deprecated = deprecated;
     }
 
-
     public entry fun toggle_allow_paired_token(signer: &signer, token: Object<Metadata>, allowed: bool) acquires TokimonsterStorage {
         let signer_addr = signer::address_of(signer);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
