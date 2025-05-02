@@ -2,6 +2,7 @@
 module Tokimonster::TokimonsterTests {
     use std::string::utf8;
     use std::signer;
+    use std::signer::address_of;
     use std::vector;
     use aptos_framework::account;
     use aptos_framework::fungible_asset::{Self, Metadata};
@@ -276,6 +277,13 @@ module Tokimonster::TokimonsterTests {
         // Test non-existent user
         let non_existent_tokens = Tokimonster::get_tokens_deployed_by_user(@0x999);
         assert!(vector::length(&non_existent_tokens) == 0, 1001);
+    }
+
+    #[test]
+    fun test_compair_address() {
+        let (boomie, lp_locker, deployer, dex) = setup_test(b"test_get_tokens_deployed_by_user");
+        let cmp = Tokimonster::compare_address(address_of(&lp_locker), address_of(&deployer));
+        assert!(cmp == 2, 1003);
     }
 
     // Helper function to create a test paired token

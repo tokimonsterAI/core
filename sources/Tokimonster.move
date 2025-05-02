@@ -23,6 +23,7 @@ module Tokimonster::Tokimonster {
 
     const TICK_SPACING_VECTOR: vector<u8> = vector[1, 10, 60, 200];
     const TICK_BOUND: u32 = 443636;
+    const MAX_U32: u32 = 0xffffffff;
 
     #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
     struct TokimonsterConfig has key {
@@ -152,19 +153,35 @@ module Tokimonster::Tokimonster {
         );
 
         let new_token = object::convert<TokimonsterToken, Metadata>(tokimonster_token);
+        let cmp = compare_address(object_address(&new_token), object_address(&paired_token));
         let pool_exists = pool_v3::liquidity_pool_exists(new_token, paired_token, fee_tier);
         assert!(!pool_exists, EPOOL_ALREADY_EXISTS);
 
-        let _pool = pool_v3::create_pool(new_token, paired_token, fee_tier, tick);
-        let position = pool_v3::open_position(locker, new_token, paired_token, fee_tier, tick, get_max_usable_tick(fee_tier));
+        let tick_lower = tick;
+        let tick_upper = get_max_usable_tick(fee_tier);
+        let token_a = new_token;
+        let token_b = paired_token;
+        let supply_a = max_supply;
+        let supply_b = 0;
+
+        if (cmp == 1) {
+            tick_lower = get_min_usable_tick(fee_tier);
+            tick_upper = tick;
+            token_a = paired_token;
+            token_b = new_token;
+            supply_a = 0;
+            supply_b = max_supply;
+        };
+        let _pool = pool_v3::create_pool(token_a, token_b, fee_tier, tick);
+        let position = pool_v3::open_position(locker, token_a, token_b, fee_tier, tick_lower, tick_upper);
         router_v3::add_liquidity(
             locker,
             position,
-            new_token,
-            paired_token,
+            token_a,
+            token_b,
             fee_tier,
-            max_supply,
-            0,
+            supply_a,
+            supply_b,
             0,
             0,
             0
@@ -212,6 +229,30 @@ module Tokimonster::Tokimonster {
         (TICK_BOUND / tick_spacing) * tick_spacing
     }
 
+    fun get_min_usable_tick(fee_tier: u8): u32 {
+        let max_usable = get_max_usable_tick(fee_tier);
+        MAX_U32 - max_usable + 1
+    }
+
+    public fun compare_address(addr1: address, addr2: address): u64 {
+        let addr1_bytes = std::bcs::to_bytes(&addr1);
+        let addr2_bytes = std::bcs::to_bytes(&addr2);
+
+        let len = addr1_bytes.length();
+        let i = 0;
+        while (i < len) {
+            let b1 = addr1_bytes[i];
+            let b2 = addr2_bytes[i];
+            if (b1 > b2) {
+                return 1;
+            } else if (b1 < b2) {
+                return 2;
+            };
+            i += 1;
+        };
+        0
+    }
+
     public entry fun set_deprecated(signer: &signer, deprecated: bool) acquires TokimonsterConfig {
         let signer_addr = signer::address_of(signer);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
@@ -219,6 +260,7 @@ module Tokimonster::Tokimonster {
         let tokimonster_config = borrow_global_mut<TokimonsterConfig>(object_address);
         tokimonster_config.deprecated = deprecated;
     }
+
 
     public entry fun toggle_allow_paired_token(signer: &signer, token: Object<Metadata>, allowed: bool) acquires TokimonsterStorage {
         let signer_addr = signer::address_of(signer);
