@@ -23,6 +23,7 @@ module Tokimonster::Tokimonster {
 
     const TICK_SPACING_VECTOR: vector<u8> = vector[1, 10, 60, 200];
     const TICK_BOUND: u32 = 443636;
+    const U32_MAX: u32 = 0xffffffff;
 
     #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
     struct TokimonsterConfig has key {
@@ -129,7 +130,6 @@ module Tokimonster::Tokimonster {
         let signer_addr = signer::address_of(locker);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
         assert!(fee_tier < (TICK_SPACING_VECTOR.length() as u8), EFEE_TIER_OUT_OF_RANGE);
-        assert!(tick % (TICK_SPACING_VECTOR[(fee_tier as u64)] as u32) == 0 && tick < TICK_BOUND, ETICK_NOT_VALID);
 
         let object_address = object::create_object_address(&signer_addr, TOKIMONSTER_NAME);
         let tokimonster_config = borrow_global<TokimonsterConfig>(object_address);
@@ -210,6 +210,30 @@ module Tokimonster::Tokimonster {
     fun get_max_usable_tick(fee_tier: u8): u32 {
         let tick_spacing = (TICK_SPACING_VECTOR[(fee_tier as u64)] as u32);
         (TICK_BOUND / tick_spacing) * tick_spacing
+    }
+
+    #[view]
+    public fun get_negative_tick(tick: u32): u32 {
+        U32_MAX - tick + 1
+    }
+
+    public fun compare_address(addr1: address, addr2: address): u64 {
+        let addr1_bytes = std::bcs::to_bytes(&addr1);
+        let addr2_bytes = std::bcs::to_bytes(&addr2);
+
+        let len = addr1_bytes.length();
+        let i = 0;
+        while (i < len) {
+            let b1 = addr1_bytes[i];
+            let b2 = addr2_bytes[i];
+            if (b1 > b2) {
+                return 1;
+            } else if (b1 < b2) {
+                return 2;
+            };
+            i += 1;
+        };
+        0
     }
 
     public entry fun set_deprecated(signer: &signer, deprecated: bool) acquires TokimonsterConfig {
