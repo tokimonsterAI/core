@@ -209,6 +209,17 @@ module Tokimonster::TokimonsterRewarder {
         }
     }
 
+    #[view]
+    public fun get_recipient_for_postion(position: address): address acquires RewarderStorage {
+        let obj_address = get_obj_address();
+        let rewarder = borrow_global<RewarderStorage>(obj_address);
+        if (rewarder.user_reward_recipient_for_token.contains(position)) {
+            *rewarder.user_reward_recipient_for_token.borrow(position)
+        } else {
+            @0x0
+        }
+    }
+
     public entry fun replace_user_reward_recipient(signer: &signer, position: address, recipient: address) acquires RewarderStorage {
         let signer_addr = signer::address_of(signer);
         let obj_address = get_obj_address();
