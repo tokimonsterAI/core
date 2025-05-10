@@ -281,8 +281,12 @@ module Tokimonster::Tokimonster {
     #[view]
     public fun get_token_deploy_position(token: Object<Metadata>): address acquires TokimonsterStorage {
         let object_address = object::create_object_address(&@Tokimonster, TOKIMONSTER_NAME);
-        let tokimonsterStorage = borrow_global<TokimonsterStorage>(object_address);
-        tokimonsterStorage.deployment_info_for_token.borrow(token).position
+        let tokimonster_storage = borrow_global<TokimonsterStorage>(object_address);
+        if (tokimonster_storage.deployment_info_for_token.contains(token)) {
+            tokimonster_storage.deployment_info_for_token.borrow(token).position
+        } else {
+            @0x0
+        }
     }
 
     public entry fun claim_rewards(signer: &signer, token: Object<Metadata>) acquires TokimonsterStorage {
