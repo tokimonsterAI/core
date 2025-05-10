@@ -198,6 +198,7 @@ module Tokimonster::TokimonsterRewarder {
         emit(event);
     }
 
+    #[view]
     public fun get_postions_for_user(user: address): vector<address> acquires RewarderStorage {
         let obj_address = get_obj_address();
         let rewarder = borrow_global<RewarderStorage>(obj_address);
