@@ -205,7 +205,7 @@ module Tokimonster::TokimonsterRewarder {
     }
 
     #[view]
-    public fun get_postions_for_user(user: address): vector<address> acquires RewarderStorage {
+    public fun get_positions_for_user(user: address): vector<address> acquires RewarderStorage {
         let obj_address = get_obj_address();
         let rewarder = borrow_global<RewarderStorage>(obj_address);
         if (rewarder.user_positions.contains(user)) {
@@ -216,7 +216,7 @@ module Tokimonster::TokimonsterRewarder {
     }
 
     #[view]
-    public fun get_recipient_for_postion(position: address): address acquires RewarderStorage {
+    public fun get_recipient_for_position(position: address): address acquires RewarderStorage {
         let obj_address = get_obj_address();
         let rewarder = borrow_global<RewarderStorage>(obj_address);
         if (rewarder.user_reward_recipient_for_token.contains(position)) {
@@ -320,14 +320,14 @@ module Tokimonster::TokimonsterRewarder {
 
         // Deposit fees to user and team
         let (tokimonster_token_fa, lp_token_fa) = pool_v3::claim_fees(signer, position_obj);
-        deposite_fa_to_user_and_team(tokimonster_token_fa, team_reward, team_recipient, *recipient);
-        deposite_fa_to_user_and_team(lp_token_fa, team_reward, team_recipient, *recipient);
+        deposit_fa_to_user_and_team(tokimonster_token_fa, team_reward, team_recipient, *recipient);
+        deposit_fa_to_user_and_team(lp_token_fa, team_reward, team_recipient, *recipient);
 
         // Deposit rewards to user and team
         let reward_fas = pool_v3::claim_rewards(signer, position_obj);
         let rewards_len = reward_fas.length();
         while (rewards_len > 0) {
-            deposite_fa_to_user_and_team(reward_fas.remove(rewards_len - 1), team_reward, team_recipient, *recipient);
+            deposit_fa_to_user_and_team(reward_fas.remove(rewards_len - 1), team_reward, team_recipient, *recipient);
             rewards_len = rewards_len - 1;
         };
         reward_fas.destroy_empty();
@@ -340,7 +340,7 @@ module Tokimonster::TokimonsterRewarder {
         emit(event);
     }
 
-    fun deposite_fa_to_user_and_team(fa: FungibleAsset, team_reward: u64, team_recipient: address, user_recipient: address) {
+    fun deposit_fa_to_user_and_team(fa: FungibleAsset, team_reward: u64, team_recipient: address, user_recipient: address) {
         let amount = fungible_asset::amount(&fa);
         let team_amount = (amount * team_reward) / 100;
         let team_fa = fungible_asset::extract(&mut fa, team_amount);

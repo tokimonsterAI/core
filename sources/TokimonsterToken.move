@@ -14,7 +14,7 @@ module Tokimonster::TokimonsterToken {
     const PROJECT_URL_BYTES: vector<u8> = b"https://tokimonster.io";
     const ENOT_DEPLOYER: u64 = 101;
 
-    struct ExtralMetadata has store, copy, drop {
+    struct ExternalMetadata has store, copy, drop {
         deployer: address,
         fid: u128,
         image: String,
@@ -23,7 +23,7 @@ module Tokimonster::TokimonsterToken {
 
     struct TokimonsterToken has key, drop {
         metadata: Object<Metadata>,
-        external_metadata: ExtralMetadata
+        external_metadata: ExternalMetadata
     }
 
     #[event]
@@ -95,7 +95,7 @@ module Tokimonster::TokimonsterToken {
         let store = primary_fungible_store::ensure_primary_store_exists(admin_address, metadata);
         fungible_asset::deposit(store, fa);
 
-        let extral_metadata = ExtralMetadata {
+        let external_metadata = ExternalMetadata {
             deployer,
             fid,
             image,
@@ -105,7 +105,7 @@ module Tokimonster::TokimonsterToken {
         // store the metadata to the token
         move_to(&object::generate_signer(&constructor_ref), TokimonsterToken {
             metadata,
-            external_metadata: extral_metadata
+            external_metadata
         });
 
         let tokimonsterToken = object::object_from_constructor_ref<TokimonsterToken>(&constructor_ref);
@@ -153,7 +153,7 @@ module Tokimonster::TokimonsterToken {
     }
 
     #[view]
-    public fun get_external_metadata(token: Object<TokimonsterToken>): ExtralMetadata acquires TokimonsterToken {
+    public fun get_external_metadata(token: Object<TokimonsterToken>): ExternalMetadata acquires TokimonsterToken {
         let token_data = borrow_global<TokimonsterToken>(object::object_address(&token));
         token_data.external_metadata
     }
@@ -168,22 +168,22 @@ module Tokimonster::TokimonsterToken {
     }
 
     #[test_only]
-    public fun get_deployer(metadata: &ExtralMetadata): address {
+    public fun get_deployer(metadata: &ExternalMetadata): address {
         metadata.deployer
     }
 
     #[test_only]
-    public fun get_fid(metadata: &ExtralMetadata): u128 {
+    public fun get_fid(metadata: &ExternalMetadata): u128 {
         metadata.fid
     }
 
     #[test_only]
-    public fun get_image(metadata: &ExtralMetadata): String {
+    public fun get_image(metadata: &ExternalMetadata): String {
         metadata.image
     }
 
     #[test_only]
-    public fun get_cast_hash(metadata: &ExtralMetadata): String {
+    public fun get_cast_hash(metadata: &ExternalMetadata): String {
         metadata.cast_hash
     }
 }

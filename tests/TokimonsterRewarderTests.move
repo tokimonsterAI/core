@@ -102,7 +102,7 @@ module Tokimonster::TokimonsterRewarderTests {
         let new_recipient = account::create_account_for_test(@0x789);
         let new_reward = 50;
         let deployer = TokimonsterTests::deploy_token();
-        let positions = TokimonsterRewarder::get_postions_for_user(deployer);
+        let positions = TokimonsterRewarder::get_positions_for_user(deployer);
 
         TokimonsterRewarder::set_override_team_rewards_for_token(&tokimonster, *positions.borrow(0), signer::address_of(&new_recipient), new_reward);
         let (recipient, reward) = TokimonsterRewarder::get_override_team_reward_for_token(*positions.borrow(0));
@@ -118,7 +118,7 @@ module Tokimonster::TokimonsterRewarderTests {
         let new_recipient = account::create_account_for_test(@0x789);
         let new_reward = 50;
         let deployer = TokimonsterTests::deploy_token();
-        let positions = TokimonsterRewarder::get_postions_for_user(deployer);
+        let positions = TokimonsterRewarder::get_positions_for_user(deployer);
 
         TokimonsterRewarder::set_override_team_rewards_for_token(&user, *positions.borrow(0), signer::address_of(&new_recipient), new_reward);
     }
@@ -127,7 +127,7 @@ module Tokimonster::TokimonsterRewarderTests {
     fun test_get_postions_for_user() {
         let (tokimonster, _user, team_recipient) = setup_test();
         let user = TokimonsterTests::deploy_token();
-        let positions = TokimonsterRewarder::get_postions_for_user(user);
+        let positions = TokimonsterRewarder::get_positions_for_user(user);
         assert!(vector::length(&positions) == 1, EINVALID_AMOUNT);
     }
 
@@ -138,12 +138,12 @@ module Tokimonster::TokimonsterRewarderTests {
 
         let (tokimonster, _user, team_recipient) = setup_test();
         let user = TokimonsterTests::deploy_token();
-        let positions = TokimonsterRewarder::get_postions_for_user(user);
+        let positions = TokimonsterRewarder::get_positions_for_user(user);
 
         TokimonsterRewarder::replace_user_reward_recipient(&tokimonster, *positions.borrow(0), signer::address_of(&new_recipient));
-        positions = TokimonsterRewarder::get_postions_for_user(user);
+        positions = TokimonsterRewarder::get_positions_for_user(user);
         assert!(positions.length() == 0, EINVALID_AMOUNT);
-        let new_positions = TokimonsterRewarder::get_postions_for_user(signer::address_of(&new_recipient));
+        let new_positions = TokimonsterRewarder::get_positions_for_user(signer::address_of(&new_recipient));
         assert!(new_positions.length() == 1, EINVALID_AMOUNT);
     }
 
@@ -155,12 +155,12 @@ module Tokimonster::TokimonsterRewarderTests {
 
         let (tokimonster, _user, team_recipient) = setup_test();
         let user = TokimonsterTests::deploy_token();
-        let positions = TokimonsterRewarder::get_postions_for_user(user);
+        let positions = TokimonsterRewarder::get_positions_for_user(user);
 
         TokimonsterRewarder::replace_user_reward_recipient(&new_recipient, *positions.borrow(0), signer::address_of(&new_recipient));
-        positions = TokimonsterRewarder::get_postions_for_user(user);
+        positions = TokimonsterRewarder::get_positions_for_user(user);
         assert!(positions.length() == 0, EINVALID_AMOUNT);
-        let new_positions = TokimonsterRewarder::get_postions_for_user(signer::address_of(&new_recipient));
+        let new_positions = TokimonsterRewarder::get_positions_for_user(signer::address_of(&new_recipient));
         assert!(new_positions.length() == 1, EINVALID_AMOUNT);
     }
 } 
