@@ -18,6 +18,7 @@ module Tokimonster::TokimonsterRewarder {
     const ENOT_OWNER: u64 = 1000002;
     const EINVALID_AMOUNT: u64 = 1000003;
     const EZERO_ADDRESS: u64 = 1000004;
+    const ENON_CHANGED_ADDRESS: u64 = 1000005;
 
     struct RewarderConfig has key, store {
         team_recipient: address,
@@ -237,6 +238,7 @@ module Tokimonster::TokimonsterRewarder {
         };
         
         assert!(signer_addr == old_recipient || signer_addr == @Tokimonster, ENOT_OWNER);
+        assert!(old_recipient != recipient, ENON_CHANGED_ADDRESS);
 
         rewarder.user_reward_recipient_for_token.add(position, recipient);
         
