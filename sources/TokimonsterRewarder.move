@@ -17,6 +17,7 @@ module Tokimonster::TokimonsterRewarder {
     const ENOT_TOKIMONSTER: u64 = 1000001;
     const ENOT_OWNER: u64 = 1000002;
     const EINVALID_AMOUNT: u64 = 1000003;
+    const EZERO_ADDRESS: u64 = 1000004;
 
     struct RewarderConfig has key, store {
         team_recipient: address,
@@ -91,7 +92,7 @@ module Tokimonster::TokimonsterRewarder {
     public entry fun initialize(signer: &signer, team_recipient: address, team_reward: u64) {
         let signer_addr = signer::address_of(signer);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
-        assert!(team_recipient != @0x0, ENOT_OWNER);
+        assert!(team_recipient != @0x0, EZERO_ADDRESS);
         assert!(team_reward <= 100, EINVALID_AMOUNT);
 
         let constructor_ref = object::create_named_object(signer, NAME);
@@ -122,6 +123,7 @@ module Tokimonster::TokimonsterRewarder {
     public entry fun update_team_reward(signer: &signer, team_reward: u64) acquires RewarderConfig {
         let signer_addr = signer::address_of(signer);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
+        assert!(team_reward <= 100, EINVALID_AMOUNT);
         let obj_address = get_obj_address();
         let rewarder = borrow_global_mut<RewarderConfig>(obj_address);
         rewarder.team_reward = team_reward;
@@ -137,6 +139,7 @@ module Tokimonster::TokimonsterRewarder {
     public entry fun update_team_recipient(signer: &signer, team_recipient: address) acquires RewarderConfig {
         let signer_addr = signer::address_of(signer);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
+        assert!(team_recipient != @0x0, EZERO_ADDRESS);
 
         let obj_address = get_obj_address();
         let rewarder = borrow_global_mut<RewarderConfig>(obj_address);
@@ -179,6 +182,8 @@ module Tokimonster::TokimonsterRewarder {
     public entry fun set_override_team_rewards_for_token(signer: &signer, position: address, team_recipient: address, team_reward: u64) acquires RewarderStorage {
         let signer_addr = signer::address_of(signer);
         assert!(signer_addr == @Tokimonster, ENOT_TOKIMONSTER);
+        assert!(team_recipient != @0x0, EZERO_ADDRESS);
+        assert!(team_reward <= 100, EINVALID_AMOUNT);
 
         let obj_address = get_obj_address();
         let rewarder = borrow_global_mut<RewarderStorage>(obj_address);
