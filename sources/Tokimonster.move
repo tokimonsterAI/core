@@ -10,6 +10,7 @@ module Tokimonster::Tokimonster {
     use dex_contract::router_v3;
     use Tokimonster::TokimonsterToken::{Self, TokimonsterToken};
     use dex_contract::pool_v3;
+    use dex_contract::swap_math;
 
     const TOKIMONSTER_NAME: vector<u8> = b"Tokimonster";
     const ENOT_TOKIMONSTER: u64 = 1000001;
@@ -24,6 +25,7 @@ module Tokimonster::Tokimonster {
     const TICK_SPACING_VECTOR: vector<u8> = vector[1, 10, 60, 200];
     const TICK_BOUND: u32 = 443636;
     const U32_MAX: u32 = 0xffffffff;
+    const PENALTY_MINT_AMOUNT: u64 = 100000000000;
 
     #[resource_group_member(group = aptos_framework::object::ObjectGroup)]
     struct TokimonsterConfig has key {
@@ -143,7 +145,7 @@ module Tokimonster::Tokimonster {
             locker,
             name,
             symbol,
-            max_supply,
+            max_supply + PENALTY_MINT_AMOUNT,
             salt,
             deployer,
             fid,
@@ -156,7 +158,13 @@ module Tokimonster::Tokimonster {
         assert!(!pool_exists, EPOOL_ALREADY_EXISTS);
 
         let _pool = pool_v3::create_pool(new_token, paired_token, fee_tier, tick);
-        let position = pool_v3::open_position(locker, new_token, paired_token, fee_tier, tick, get_max_usable_tick(fee_tier));
+        let tick_lower = tick;
+        let tick_upper = get_max_usable_tick(fee_tier);
+        if (compare_address(object::object_address(&new_token), object::object_address(&paired_token)) == 2) {
+            tick_lower = get_negative_tick(tick_upper);
+            tick_upper = get_negative_tick(tick_lower);
+        };
+        let position = pool_v3::open_position(locker, new_token, paired_token, fee_tier, tick_lower, tick_upper);
         router_v3::add_liquidity(
             locker,
             position,
@@ -207,6 +215,25 @@ module Tokimonster::Tokimonster {
         emit(event);
     }
 
+    #[view]
+    public fun get_liquidity_supply(max_supply:u64, sqrt_price_lower:u128, sqrt_price_upper:u128): u64 {
+        let liquidity_delta_ =
+            swap_math::get_liquidity_from_b(
+                sqrt_price_lower,
+                sqrt_price_upper,
+                max_supply - 1,
+                true
+            );
+        let amount_a =
+            swap_math::get_delta_b(
+                sqrt_price_lower,
+                sqrt_price_upper,
+                liquidity_delta_,
+                true
+            );
+        amount_a
+    }
+
     fun get_max_usable_tick(fee_tier: u8): u32 {
         let tick_spacing = (TICK_SPACING_VECTOR[(fee_tier as u64)] as u32);
         (TICK_BOUND / tick_spacing) * tick_spacing
@@ -215,6 +242,12 @@ module Tokimonster::Tokimonster {
     #[view]
     public fun get_negative_tick(tick: u32): u32 {
         U32_MAX - tick + 1
+    }
+
+    #[view]
+    public fun get_max_usable_tick_view(fee_tier: u8): u32 {
+        assert!(fee_tier < (TICK_SPACING_VECTOR.length() as u8), EFEE_TIER_OUT_OF_RANGE);
+        get_max_usable_tick(fee_tier)
     }
 
     public fun compare_address(addr1: address, addr2: address): u64 {
