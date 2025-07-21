@@ -157,13 +157,15 @@ module Tokimonster::Tokimonster {
         let pool_exists = pool_v3::liquidity_pool_exists(new_token, paired_token, fee_tier);
         assert!(!pool_exists, EPOOL_ALREADY_EXISTS);
 
-        let _pool = pool_v3::create_pool(new_token, paired_token, fee_tier, tick);
         let tick_lower = tick;
         let tick_upper = get_max_usable_tick(fee_tier);
+        let tick_init = tick;
         if (compare_address(object::object_address(&new_token), object::object_address(&paired_token)) == 2) {
             tick_lower = get_negative_tick(tick_upper);
             tick_upper = get_negative_tick(tick_lower);
+            tick_init = tick_upper;
         };
+        let _pool = pool_v3::create_pool(new_token, paired_token, fee_tier, tick_init);
         let position = pool_v3::open_position(locker, new_token, paired_token, fee_tier, tick_lower, tick_upper);
         router_v3::add_liquidity(
             locker,
