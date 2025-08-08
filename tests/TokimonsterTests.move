@@ -5,9 +5,9 @@ module Tokimonster::TokimonsterTests {
     use std::vector;
     use aptos_framework::account;
     use aptos_framework::fungible_asset::{Self, Metadata};
-    use aptos_framework::object::Object;
-    use Tokimonster::TokimonsterRewarder;
+    use aptos_framework::object::{Object, object_address};
     use Tokimonster::Tokimonster;
+    use Tokimonster::TokimonsterRewarder;
     use dex_contract::pool_v3;
     use dex_contract::position_v3;
 
@@ -276,6 +276,26 @@ module Tokimonster::TokimonsterTests {
         // Test non-existent user
         let non_existent_tokens = Tokimonster::get_tokens_deployed_by_user(@0x999);
         assert!(vector::length(&non_existent_tokens) == 0, 1001);
+    }
+
+    #[test]
+    fun test_compare_address() {
+        let (tokimonster, _, deployer, _) = setup_test(b"test_compare_address");
+        let deployer_addr = signer::address_of(&deployer);
+
+        let result1 = Tokimonster::compare_address(
+            @0x1,
+            @0x2
+        );
+        assert!(result1 == 2, 0);
+
+        // Create a paired token for testing
+        let paired_token = create_test_paired_token(&tokimonster);
+        let result2 = Tokimonster::compare_address(
+            object_address(&paired_token),
+            @0x1
+        );
+        assert!(result2 == 1, 1);
     }
 
     // Helper function to create a test paired token
