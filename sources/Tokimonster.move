@@ -55,6 +55,13 @@ module Tokimonster::Tokimonster {
     }
 
     #[event]
+    struct Params has store, drop {
+        tick: u32,
+        tick_lower: u32,
+        tick_upper: u32,
+    }
+
+    #[event]
     struct DeployTokenEvent has store, drop {
         store_address: address,
         token: Object<Metadata>,
@@ -157,14 +164,9 @@ module Tokimonster::Tokimonster {
         let pool_exists = pool_v3::liquidity_pool_exists(new_token, paired_token, fee_tier);
         assert!(!pool_exists, EPOOL_ALREADY_EXISTS);
 
-        let tick_lower = tick;
+        let tick_lower = tick + (TICK_SPACING_VECTOR[(fee_tier as u64)] as u32);
         let tick_upper = get_max_usable_tick(fee_tier);
         let tick_init = tick;
-        if (compare_address(object::object_address(&new_token), object::object_address(&paired_token)) == 2) {
-            tick_lower = get_negative_tick(tick_upper);
-            tick_upper = get_negative_tick(tick_lower);
-            tick_init = tick_upper;
-        };
         let _pool = pool_v3::create_pool(new_token, paired_token, fee_tier, tick_init);
         let position = pool_v3::open_position(locker, new_token, paired_token, fee_tier, tick_lower, tick_upper);
         router_v3::add_liquidity(
@@ -220,14 +222,14 @@ module Tokimonster::Tokimonster {
     #[view]
     public fun get_liquidity_supply(max_supply:u64, sqrt_price_lower:u128, sqrt_price_upper:u128): u64 {
         let liquidity_delta_ =
-            swap_math::get_liquidity_from_b(
+            swap_math::get_liquidity_from_a(
                 sqrt_price_lower,
                 sqrt_price_upper,
                 max_supply - 1,
                 true
             );
         let amount_a =
-            swap_math::get_delta_b(
+            swap_math::get_delta_a(
                 sqrt_price_lower,
                 sqrt_price_upper,
                 liquidity_delta_,
